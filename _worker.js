@@ -24,7 +24,7 @@ let 科拉什拆分_2 = "sh";
 export default {
   async fetch(访问请求, env) {
     订阅路径 = env.SUB_PATH ?? 订阅路径;
-    验证UUID = 生成UUID();
+    验证UUID = env.SUB_UUID ?? 生成UUID();
     优选链接 = env.TXT_URL ?? 优选链接;
     NAT64前缀 = env.NAT64 ?? NAT64前缀;
     DOH地址 = env.DOH ?? DOH地址;
