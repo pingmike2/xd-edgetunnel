@@ -46,7 +46,7 @@ export default {
                         url.pathname === `/${encodeURIComponent(订阅路径)}` ||
                         url.pathname.startsWith(反代前缀);
 
-    // 处理非订阅路径的访问
+    // 处理非订阅路径的访问 - 改为直接fetch页面内容呈现
     if (不是WS请求 && !是订阅路径) {
       if (伪装网页) {
         try {
@@ -59,29 +59,23 @@ export default {
           targetUrl.pathname = url.pathname;  // 使用当前请求的路径
           targetUrl.search = url.search;      // 保留查询参数
           
-          // 创建反代请求
-          const 反代请求 = new Request(targetUrl.toString(), {
+          // 创建请求（不设置任何自定义头，不传递客户端头信息）
+          const fetchRequest = new Request(targetUrl.toString(), {
             method: 访问请求.method,
-            headers: new Headers(访问请求.headers),
+            headers: new Headers(),  // 空headers
             body: 访问请求.body,
             redirect: "follow"
           });
           
-          // 添加必要的 headers 以确保反代正常工作
-          反代请求.headers.set("Host", targetUrl.host);
-          反代请求.headers.set("Referer", targetUrl.origin);
+          // 发送请求并返回响应
+          const fetchResponse = await fetch(fetchRequest);
           
-          // 发送反代请求并返回响应
-          const 反代响应 = await fetch(反代请求);
+          // 复制原始响应头（不移除安全头）
+          const 响应头 = new Headers(fetchResponse.headers);
           
-          // 复制响应并移除可能导致问题的 headers
-          const 响应头 = new Headers(反代响应.headers);
-          响应头.delete("Content-Security-Policy");
-          响应头.delete("X-Frame-Options");
-          
-          return new Response(反代响应.body, {
-            status: 反代响应.status,
-            statusText: 反代响应.statusText,
+          return new Response(fetchResponse.body, {
+            status: fetchResponse.status,
+            statusText: fetchResponse.statusText,
             headers: 响应头
           });
         } catch {
